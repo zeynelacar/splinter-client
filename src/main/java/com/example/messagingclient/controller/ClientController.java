@@ -22,7 +22,7 @@ public class ClientController {
 
 
     @PostMapping(value ="/send")
-    public ResponseEntity<?> addApplicant(@RequestBody TcpClientRequestDTO request) throws IOException {
+    public ResponseEntity<?> send(@RequestBody TcpClientRequestDTO request) throws IOException {
         ResponseEntity<?> response = null;
         TcpServerResponseDTO serverResponse = clientService.sendTcp(request);
         response = new ResponseEntity<>(serverResponse,HttpStatus.OK);

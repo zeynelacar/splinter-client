@@ -2,12 +2,11 @@ package com.example.messagingclient.business;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.springframework.util.StringUtils;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.PrintWriter;
+import java.io.*;
 import java.net.Socket;
+import java.util.Scanner;
 
 public class ClientConfig {
 
@@ -17,13 +16,11 @@ public class ClientConfig {
     private PrintWriter writer;
     private BufferedReader reader;
 
-    private String status = "open";
-
     public void startConnection(String ip,int port) throws IOException {
 
         try {
             socket = new Socket(ip, port);
-            writer = new PrintWriter(socket.getOutputStream(), true);
+            writer = new PrintWriter(new OutputStreamWriter(socket.getOutputStream()));
             reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
             logger.info("successfully connected");
         }catch(Exception ex){
@@ -32,10 +29,16 @@ public class ClientConfig {
     }
 
     public String sendMessage(String message) throws IOException {
-        writer.println(message);
-        String response = reader.readLine();
-        logger.info(response);
-        return response;
+        message = prepareMessage(message);
+        Scanner sc = new Scanner(System.in);
+        if(socket.isConnected()) {
+            writer.write(message);
+            writer.flush();
+            String response = reader.readLine();
+            logger.info(response);
+            return response;
+        }
+        return null;
     }
 
     public void stopConnection() throws IOException {
@@ -44,5 +47,18 @@ public class ClientConfig {
         socket.close();
     }
 
+    private static String prepareMessage(String message){
+        StringBuilder sb = new StringBuilder();
+        int len = message.length();
+        String head = Integer.toHexString(len);
+        head = zeroPadLeft(head,6);
+        sb.append(head);
+        sb.append(message);
+        return sb.toString();
+    }
+
+    private static String zeroPadLeft(String s, int n) {
+        return String.format("%" + n + "s", s).replace(' ', '0');
+    }
 
 }
